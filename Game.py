@@ -16,11 +16,18 @@ char = pygame.image.load('GameImages/S00.png')
 #The clock
 clock = pygame.time.Clock()
 
+#The sound variables
+
+#The -1 means it is on a loop if not the song would stop after the first time
+music = pygame.mixer.music.load('GameImages/music.mp3')
+pygame.mixer.music.play(-1)
+
 #Don't remember
 backgroundState = 0
 
 #The score (Displayed top right)
 score = 0
+
 
 #All the variables
 class player(object):
@@ -65,6 +72,32 @@ class player(object):
         #For self.x in changes poistion on the grid you set
         self.hitbox = (self.x +17, self.y + 4, 29, 60)
         pygame.draw.rect(win, (255,0,0), self.hitbox, 2)
+
+    #If the player gets hit/collides with enemy
+    def hit(self):
+        #REsets to left portion of screen
+        self.isJump = False
+        self.jumpCount = 10
+        self.x = 60
+        self.y = 410
+        #sets the anaimation of the walk to zero so not wierd looking
+        self.walkCount = 0
+        #BElow will display -5 points on the screen if hit by the enemy
+        font1 = pygame.font.SysFont("comicsans", 100)
+        text = font1.render('-5', 1, (255,0,0))
+        win.blit(text, (250 -(text.get_width()/2),200))
+        pygame.display.update()
+        #Time delay to show if thew player got hit
+        i = 0
+        while i < 100:
+            pygame.time.delay(10)
+            i += 1
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    i = 30
+                    pygame.quit()
+
+
 #Bullet
 class projectile(object):
     #Variables
@@ -172,6 +205,13 @@ bullets = []
 run = True
 while run:
     clock.tick(27)
+    #If player gets hit then and goblin is visible
+    if goblin.visible == True:
+        if man.hitbox[1] < goblin.hitbox[1] + goblin.hitbox[3] and man.hitbox[1] + man.hitbox[3] > goblin.hitbox[1]:
+            if man.hitbox[0] + man.hitbox[2] > goblin.hitbox[0] and man.hitbox[0] <       goblin.hitbox[0] + goblin.hitbox[2]:
+                man.hit()
+                score -= 5
+
     #Bullet shooting timeout
     if shootLoop > 0:
         shootLoop += 1
@@ -181,18 +221,29 @@ while run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
-        
+            
     for bullet in bullets:
         if bullet.y - bullet.radius < goblin.hitbox[1] + goblin.hitbox[3] and bullet.y + bullet.radius > goblin.hitbox[1]:
             if bullet.x + bullet.radius > goblin.hitbox[0] and bullet.x - bullet.radius < goblin.hitbox[0] + goblin.hitbox[2]:
-                goblin.hit()
-                score += 1
-                bullets.pop(bullets.index(bullet))
-                
+                if goblin.visible == True:
+                    goblin.hit()
+                    score += 1
+                    bullets.pop(bullets.index(bullet))
+                else:
+                    if bullet.x < 500 and bullet.x > 0:
+                        bullet.x += bullet.vel
+                    else:
+                        bullets.pop(bullets.index(bullet))
+
         if bullet.x < 500 and bullet.x > 0:
             bullet.x += bullet.vel
         else:
             bullets.pop(bullets.index(bullet))
+                
+        if bullet.x < 500 and bullet.x > 0:
+            bullet.x += bullet.vel
+
+
 
     keys = pygame.key.get_pressed()
 
