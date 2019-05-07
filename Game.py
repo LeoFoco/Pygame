@@ -28,7 +28,6 @@ backgroundState = 0
 #The score (Displayed top right)
 score = 0
 
-
 #All the variables
 class player(object):
     def __init__(self,x,y,width,height):
@@ -44,58 +43,65 @@ class player(object):
         self.jumpCount = 10
         self.standing = True
         self.hitbox = (self.x +17, self.y + 11, 29, 57)
-
+        self.health = 10
 
 
     #Charcter movement
     def draw(self, win):
         if self.walkCount + 1 >= 27:
             self.walkCount = 0
+
         #If the player isn't standing if statement
         if not (self.standing):
+
             #Moving left
             if self.left:
                 win.blit(walkLeft[self.walkCount//3], (self.x,self.y))
                 self.walkCount += 1
+
             #Moving Right
             elif self.right:
                 win.blit(walkRight[self.walkCount//3], (self.x,self.y))
                 self.walkCount +=1
+
         #Standing
         else:
             if self.right:
                 win.blit(walkRight[0], (self.x, self.y))
             else:
                 win.blit(walkLeft[0], (self.x, self.y))
+
         #Hitbox for player  
         #For self.y it changes base, then height 
         #For self.x in changes poistion on the grid you set
         self.hitbox = (self.x +17, self.y + 4, 29, 60)
         pygame.draw.rect(win, (255,0,0), self.hitbox, 2)
 
+        #Health Bar
+        pygame.draw.rect(win, (255,0,0), (self.hitbox[0], self.hitbox[1] - 20, 50, 10)) 
+        pygame.draw.rect(win, (0,128,0), (self.hitbox[0], self.hitbox[1] - 20, 50 - (5 * (10 - self.health)), 10))
+
     #If the player gets hit/collides with enemy
     def hit(self):
-        #REsets to left portion of screen
-        self.isJump = False
-        self.jumpCount = 10
-        self.x = 60
-        self.y = 410
-        #sets the anaimation of the walk to zero so not wierd looking
-        self.walkCount = 0
-        #BElow will display -5 points on the screen if hit by the enemy
-        font1 = pygame.font.SysFont("comicsans", 100)
-        text = font1.render('-5', 1, (255,0,0))
-        win.blit(text, (250 -(text.get_width()/2),200))
-        pygame.display.update()
-        #Time delay to show if thew player got hit
-        i = 0
-        while i < 100:
-            pygame.time.delay(10)
-            i += 1
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    i = 30
-                    pygame.quit()
+        if self.health > 0:
+            self.health -= 1
+
+            #THis basically restarts the game atm if you die
+            if self.health <= 0:
+                #REsets score
+                global score
+                score = 1
+                #Will reset everyones health
+                self.Ehealth = 10
+                self.Ehealth = 10
+                self.health = 10
+                #REsets to left portion of screen
+                self.isJump = False
+                self.jumpCount = 10
+                self.x = 60
+                self.y = 410
+                #sets the anaimation of the walk to zero so not wierd looking while spawning back
+                self.walkCount = 0
 
 
 #Bullet
@@ -116,9 +122,11 @@ class projectile(object):
 
 #Code below makes the enemy
 class enemy(object):
+
     #Imports images
     walkRight = [pygame.image.load('GameImages/E0.png'), pygame.image.load('GameImages/E1.png'), pygame.image.load('GameImages/E2.png'), pygame.image.load('GameImages/E3.png'), pygame.image.load('GameImages/E4.png')]
     walkLeft = [pygame.image.load('GameImages/E0.png'), pygame.image.load('GameImages/E1.png'), pygame.image.load('GameImages/E2.png'), pygame.image.load('GameImages/E3.png'), pygame.image.load('GameImages/E4.png')]
+
     #Variables for enemy
     def __init__(self, x, y, width, height, end):
         self.x = x
@@ -130,30 +138,37 @@ class enemy(object):
         self.walkCount = 0
         self.vel = 3
         self.hitbox = (self.x + 17, self.y + 2, 31, 57)
-        self.health = 10
+        self.Ehealth = 10
         self.visible = True
+
     #Draws the enemy
     def draw(self,win):
         self.move()
+
         #Saying if the goblin if visible then it will move left or right if not it will not be moving 
         if self.visible:
             if self.walkCount + 1 >= 15:
                 self.walkCount = 0
+
             #Makes the enemy walk right animation only if visible
             if self.vel > 0:
                 win.blit(self.walkRight[self.walkCount //3], (self.x, self.y))
                 self.walkCount += 1
+
             #Makes the enemy walk left animation if visible only
             else:
                 win.blit(self.walkLeft[self.walkCount //3], (self.x, self.y))
                 self.walkCount += 1
+
             #Health Bar
             pygame.draw.rect(win, (255,0,0), (self.hitbox[0], self.hitbox[1] - 20, 50, 10)) 
-            pygame.draw.rect(win, (0,128,0), (self.hitbox[0], self.hitbox[1] - 20, 50 - (5 * (10 - self.health)), 10))
+            pygame.draw.rect(win, (0,128,0), (self.hitbox[0], self.hitbox[1] - 20, 50 - (5 * (10 - self.Ehealth)), 10))
+
             #Make the hitbox
             self.hitbox = (self.x + 0, self.y + 2, 64, 64)
             #Display Hitbox
             pygame.draw.rect(win, (255,0,0), self.hitbox,2)
+
     #Makes the goblin path
     def move(self):
         #Walks right i think
@@ -163,6 +178,7 @@ class enemy(object):
             else:
                 self.vel = self.vel * -1
                 self.walkCount = 0
+
         #Walks left i think
         else:
             if self.x - self.vel > self.path[0]:
@@ -170,10 +186,11 @@ class enemy(object):
             else:
                 self.vel = self.vel * -1
                 self.walkCount = 0
+
     #Code for if the bullet hits the goblin
     def hit(self):
-        if self.health > 1:
-            self.health -= 1
+        if self.Ehealth > 1:
+            self.Ehealth -= 1
         #If the goblin has less than one health then it will do the following
         else:
             self.visible = False
@@ -210,7 +227,7 @@ while run:
         if man.hitbox[1] < goblin.hitbox[1] + goblin.hitbox[3] and man.hitbox[1] + man.hitbox[3] > goblin.hitbox[1]:
             if man.hitbox[0] + man.hitbox[2] > goblin.hitbox[0] and man.hitbox[0] <       goblin.hitbox[0] + goblin.hitbox[2]:
                 man.hit()
-                score -= 5
+                score -= 1
 
     #Bullet shooting timeout
     if shootLoop > 0:
@@ -243,8 +260,6 @@ while run:
         if bullet.x < 500 and bullet.x > 0:
             bullet.x += bullet.vel
 
-
-
     keys = pygame.key.get_pressed()
 
     if keys[pygame.K_SPACE] and shootLoop == 0:
@@ -253,7 +268,7 @@ while run:
         else:
             facing = 1
             
-        if len(bullets) < 5:
+        if len(bullets) < 3:
             bullets.append(projectile(round(man.x + man.width //2), round(man.y + man.height//2), 6, (0,0,0), facing))
 
         shootLoop = 1
@@ -277,8 +292,6 @@ while run:
     if not(man.isJump):
         if keys[pygame.K_UP] or keys[pygame.K_w]:
             man.isJump = True
-            man.right = False
-            man.left = False
             man.walkCount = 0
     else:
         if man.jumpCount >= -10:
