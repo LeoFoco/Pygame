@@ -92,8 +92,7 @@ class player(object):
                 global score
                 score = 1
                 #Will reset everyones health
-                self.Ehealth = 10
-                self.Ehealth = 10
+                goblin.health = 10
                 self.health = 10
                 #REsets to left portion of screen
                 self.isJump = False
@@ -114,7 +113,7 @@ class projectile(object):
         self.color = color
         self.facing = facing
         self.vel = 8 * facing
-    #Bullet style/ draw
+    #Bullet style/draw
     def draw(self,win):
         pygame.draw.circle(win,self.color, (self.x,self.y), self.radius)
 
@@ -138,7 +137,7 @@ class enemy(object):
         self.walkCount = 0
         self.vel = 3
         self.hitbox = (self.x + 17, self.y + 2, 31, 57)
-        self.Ehealth = 10
+        self.health = 10
         self.visible = True
 
     #Draws the enemy
@@ -162,7 +161,7 @@ class enemy(object):
 
             #Health Bar
             pygame.draw.rect(win, (255,0,0), (self.hitbox[0], self.hitbox[1] - 20, 50, 10)) 
-            pygame.draw.rect(win, (0,128,0), (self.hitbox[0], self.hitbox[1] - 20, 50 - (5 * (10 - self.Ehealth)), 10))
+            pygame.draw.rect(win, (0,128,0), (self.hitbox[0], self.hitbox[1] - 20, 50 - (5 * (10 - self.health)), 10))
 
             #Make the hitbox
             self.hitbox = (self.x + 0, self.y + 2, 64, 64)
@@ -189,8 +188,8 @@ class enemy(object):
 
     #Code for if the bullet hits the goblin
     def hit(self):
-        if self.Ehealth > 1:
-            self.Ehealth -= 1
+        if self.health > 1:
+            self.health -= 1
         #If the goblin has less than one health then it will do the following
         else:
             self.visible = False
@@ -200,7 +199,9 @@ class enemy(object):
 #This is how you put stuff onto the display/window
 def redrawGameWindow():
     global backgroundState
-    backgroundState += .25
+    #Speed of frames a second
+    backgroundState += 1
+    #Calls the anaimatipn sort of
     if backgroundState > 12:
         backgroundState = 0
     win.blit(AL[round(backgroundState)], (0,0))
@@ -225,7 +226,7 @@ while run:
     #If player gets hit then and goblin is visible
     if goblin.visible == True:
         if man.hitbox[1] < goblin.hitbox[1] + goblin.hitbox[3] and man.hitbox[1] + man.hitbox[3] > goblin.hitbox[1]:
-            if man.hitbox[0] + man.hitbox[2] > goblin.hitbox[0] and man.hitbox[0] <       goblin.hitbox[0] + goblin.hitbox[2]:
+            if man.hitbox[0] + man.hitbox[2] > goblin.hitbox[0] and man.hitbox[0] < goblin.hitbox[0] + goblin.hitbox[2]:
                 man.hit()
                 score -= 1
 
