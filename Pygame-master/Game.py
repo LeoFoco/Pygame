@@ -1,9 +1,8 @@
 import pygame
-from Player import *
 pygame.init()
 
-#Displats the screen
-win = pygame.display.set_mode((500,480))
+#Displays the screen
+win = pygame.display.set_mode((1500, 750), pygame.RESIZABLE)
 
 #Sets the name of the window
 pygame.display.set_caption("First Game")
@@ -17,7 +16,7 @@ char = pygame.image.load('Random/S00.png')
 #The clock
 clock = pygame.time.Clock()
 
-#The sound variables
+#The music
 
 #The -1 means it is on a loop if not the song would stop after the first time
 music = pygame.mixer.music.load('Music/music.mp3')
@@ -29,6 +28,79 @@ backgroundState = 0
 #The score (Displayed top right)
 score = 0
 
+#All the variables
+class player(object):
+    def __init__(self,x,y,width,height):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.vel = 5
+        self.isJump = False
+        self.left = False
+        self.right = False
+        self.walkCount = 0
+        self.jumpCount = 10
+        self.standing = True
+        self.hitbox = (self.x +17, self.y + 11, 29, 57)
+        self.health = 10
+
+
+    #Charcter movement
+    def draw(self, win):
+        if self.walkCount + 1 >= 27:
+            self.walkCount = 0
+
+        #If the player isn't standing if statement
+        if not (self.standing):
+
+            #Moving left
+            if self.left:
+                win.blit(walkLeft[self.walkCount//3], (self.x,self.y))
+                self.walkCount += 1
+
+            #Moving Right
+            elif self.right:
+                win.blit(walkRight[self.walkCount//3], (self.x,self.y))
+                self.walkCount +=1
+
+        #Standing
+        else:
+            if self.right:
+                win.blit(walkRight[0], (self.x, self.y))
+            else:
+                win.blit(walkLeft[0], (self.x, self.y))
+
+        #Hitbox for player  
+        #For self.y it changes base, then height 
+        #For self.x in changes poistion on the grid you set
+        self.hitbox = (self.x +17, self.y + 4, 29, 60)
+        pygame.draw.rect(win, (255,0,0), self.hitbox, 2)
+
+        #Health Bar
+        pygame.draw.rect(win, (255,0,0), (self.hitbox[0], self.hitbox[1] - 20, 50, 10)) 
+        pygame.draw.rect(win, (0,128,0), (self.hitbox[0], self.hitbox[1] - 20, 50 - (5 * (10 - self.health)), 10))
+
+    #If the player gets hit/collides with enemy
+    def hit(self):
+        if self.health > 0:
+            self.health -= 1
+
+            #THis basically restarts the game atm if you die
+            if self.health <= 0:
+                #REsets score
+                global score
+                score = 1
+                #Will reset everyones health
+                goblin.health = 10
+                self.health = 10
+                #REsets to left portion of screen
+                self.isJump = False
+                self.jumpCount = 10
+                self.x = 0
+                self.y = 675
+                #sets the anaimation of the walk to zero so not wierd looking while spawning back
+                self.walkCount = 0
 
 
 #Bullet
@@ -128,13 +200,13 @@ class enemy(object):
 def redrawGameWindow():
     global backgroundState
     #Speed of frames a second
-    backgroundState += 1
+    backgroundState += .25
     #Calls the anaimatipn sort of
     if backgroundState > 12:
         backgroundState = 0
     win.blit(AL[round(backgroundState)], (0,0))
     text = font.render('Score: ' + str(score), 1, (0,0,0))
-    win.blit(text, (365,10))
+    win.blit(text, (10,10))
     man.draw(win)
     goblin.draw(win)
     for bullet in bullets:
@@ -144,8 +216,9 @@ def redrawGameWindow():
 
 #mainloop
 font = pygame.font.SysFont('Times', 30, True)
-man = player(200, 410, 64,64)
-goblin = enemy(100, 410, 64, 64, 450)
+#Where the charcter spawns and size
+man = player(0, 675, 64,64)
+goblin = enemy(285, 675, 64, 64, 450)
 shootLoop = 0
 bullets = []
 run = True
@@ -161,7 +234,8 @@ while run:
     #Bullet shooting timeout
     if shootLoop > 0:
         shootLoop += 1
-    if shootLoop > 3:
+
+    if shootLoop > 4:
         shootLoop = 0
     
     for event in pygame.event.get():
